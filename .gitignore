@@ -9,6 +9,10 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+design_brief.md
+.agent
+.agents
+
 
 # testing
 /coverage

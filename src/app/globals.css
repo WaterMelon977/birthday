@@ -1,26 +1,164 @@
 @import "tailwindcss";
 
+/* ── Design Tokens ──────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Blush watercolor theme from invite card */
+  --bg-base: #fdf5f6;
+  /* Soft airy off-white/blush */
+  --blush: #fbe4e9;
+  /* Mid pink */
+  --rose: #972e43;
+  /* Deeper butterfly pink */
+  --gold: #e2c417;
+  /* Gold foil */
+  --mauve-dark: #000000;
+  /* Primary headings */
+  --plum: #7a4554;
+  /* Script text */
+  --text-body: #610835;
+  /* Subtle dark text */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ── Reset & Base ───────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: auto;
+  background: var(--bg-base);
+  color: var(--text-body);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.7;
+  overflow-x: hidden;
+  background: var(--bg-base);
+}
+
+/* ── Typography ─────────────────────────────────────────────── */
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+.font-name {
+  font-family: var(--font-name);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--mauve-dark);
+}
+
+/* ── Utility: edge-bleed ────────────────────────────────────── */
+.edge-bleed {
+  margin-left: -5%;
+  margin-right: -5%;
+  width: 110%;
+  max-width: none;
+}
+
+/* ── GPU perf layer ─────────────────────────────────────────── */
+.perf-layer {
+  will-change: transform;
+  contain: paint;
+  transform: translateZ(0);
+}
+
+/* ── Delicate Oval Border Overlay ───────────────────────────── */
+.oval-frame::after {
+  content: "";
+  position: absolute;
+  inset: 16px;
+  border: 1px solid rgba(140, 90, 115, 0.4);
+  /* mauve-dark semitransparent */
+  border-radius: 50% 50% 50% 50% / 10% 10% 10% 10%;
+  /* Tall loose oval */
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ── Film grain overlay (Softened for light theme) ──────────── */
+.film-grain {
+  position: relative;
+}
+
+.film-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 10;
+  border-radius: inherit;
+}
+
+/* ── Film perforation dots (Lightened) ──────────────────────── */
+.film-perfs {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  background: #fffafa;
+  border-right: 1px solid rgba(140, 90, 115, 0.1);
+  border-left: 1px solid rgba(140, 90, 115, 0.1);
+  z-index: 20;
+}
+
+.film-perfs span {
+  width: 14px;
+  height: 10px;
+  background: #fdf5f6;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgba(140, 90, 115, 0.2);
+}
+
+.film-perfs-left {
+  left: 0;
+}
+
+.film-perfs-right {
+  right: 0;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-base);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--rose);
+  border-radius: 6px;
+}
+
+/* ── Section spacing ────────────────────────────────────────── */
+.section-pad {
+  padding-top: 100px;
+  padding-bottom: 100px;
 }
