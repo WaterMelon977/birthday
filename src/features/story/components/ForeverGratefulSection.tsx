@@ -6,57 +6,112 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { AURA_SOLO_1, PARENTS_AURA_1, MEMORIES_1 } from "@/helpers/image-helper";
 
-
 const STRIP = [AURA_SOLO_1, PARENTS_AURA_1, MEMORIES_1];
 
 export default function ForeverGratefulSection() {
     const sectionRef = useRef<HTMLElement>(null);
     const titleRef = useRef<HTMLDivElement>(null);
-    const bodyRef = useRef<HTMLDivElement>(null);
-    const stripRef = useRef<HTMLDivElement>(null);
-    const footerRef = useRef<HTMLDivElement>(null);
+    const maskRef = useRef<HTMLDivElement>(null);
+    const scrollContentRef = useRef<HTMLDivElement>(null);
+    const textRef = useRef<HTMLDivElement>(null);
+    const imagesRef = useRef<HTMLDivElement>(null);
+    const dividerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        if (!scrollContentRef.current || !maskRef.current) return;
+
         const ctx = gsap.context(() => {
-            const tl = gsap.timeline({
-                scrollTrigger: {
-                    trigger: sectionRef.current,
-                    start: "top 70%",
-                    end: "center 30%",
-                    scrub: 0.6,
-                },
-            });
-
-            tl.fromTo(
-                titleRef.current,
-                { y: 50, opacity: 0 },
-                { y: 0, opacity: 1 }
-            )
-                .fromTo(
-                    bodyRef.current,
-                    { y: 30, opacity: 0 },
-                    { y: 0, opacity: 1 },
-                    "-=0.4"
-                )
-                .fromTo(
-                    stripRef.current?.querySelectorAll(".strip-img") ?? [],
-                    { y: 40, opacity: 0, scale: 0.9 },
-                    { y: 0, opacity: 1, scale: 1, stagger: 0.1 },
-                    "-=0.3"
-                );
-
-            // Footer reveal
+            // Initial Title reveal (happens independently of the intense scroll scrubbing)
             gsap.fromTo(
-                footerRef.current,
-                { opacity: 0 },
+                titleRef.current,
+                { y: 30, opacity: 0 },
                 {
+                    y: 0,
                     opacity: 1,
+                    duration: 0.8,
                     scrollTrigger: {
-                        trigger: footerRef.current,
-                        start: "top 90%",
+                        trigger: sectionRef.current,
+                        start: "top 70%",
                     },
                 }
             );
+
+            // Calculate precisely how far the scroll content needs to move
+            const getScrollAmt = () => {
+                const contentHeight = scrollContentRef.current?.offsetHeight || 0;
+                const maskHeight = maskRef.current?.offsetHeight || 0;
+                return Math.max(0, contentHeight - maskHeight);
+            };
+
+            // Main scrubbed timeline
+            const tl = gsap.timeline({
+                scrollTrigger: {
+                    trigger: sectionRef.current,
+                    start: "top top",
+                    // Increase the 'end' duration significantly so we have plenty of scroll space
+                    // to scrub through the y-translation AND the blur/opacity reveals gracefully.
+                    end: () => `+=${getScrollAmt() + window.innerHeight * 1.5}`,
+                    pin: true,
+                    scrub: 1.5,
+                    invalidateOnRefresh: true,
+                }
+            });
+
+            // 1. Move the entire content block up slowly
+            tl.to(scrollContentRef.current, {
+                y: () => -getScrollAmt(),
+                ease: "none",
+                duration: 2 // Gives this translation a relative weight in the timeline
+            }, 0)
+
+            // 2. Reveal the Body Text with a frosted (blur) effect WHILE it's moving
+            if (textRef.current) {
+                // Split the paragraphs to stagger them slightly
+                const paragraphs = textRef.current.querySelectorAll("p");
+                tl.fromTo(
+                    paragraphs,
+                    { opacity: 0, filter: "blur(12px)", scale: 0.95 },
+                    {
+                        opacity: 1,
+                        filter: "blur(0px)",
+                        scale: 1,
+                        stagger: 0.3,
+                        ease: "power2.out",
+                        duration: 0.8 // Relative duration to the y-translation
+                    },
+                    0.2 // Start slightly after the scroll translation begins
+                );
+            }
+
+            // 3. Reveal the Family photo strip with a frosted effect after text
+            if (imagesRef.current) {
+                const imgs = imagesRef.current.querySelectorAll(".strip-img");
+                tl.fromTo(
+                    imgs,
+                    { opacity: 0, filter: "blur(16px)", scale: 0.85, y: 40 },
+                    {
+                        opacity: 1,
+                        filter: "blur(0px)",
+                        scale: 1,
+                        y: 0,
+                        stagger: 0.2,
+                        ease: "back.out(1.2)",
+                        duration: 0.7
+                    },
+                    1.0 // Start this sequence further into the timeline (after text starts revealing)
+                );
+            }
+
+            // 4. Reveal divider
+            if (dividerRef.current) {
+                tl.fromTo(
+                    dividerRef.current,
+                    { opacity: 0, scaleX: 0 },
+                    { opacity: 1, scaleX: 1, ease: "power2.out", duration: 0.4 },
+                    "-=0.2"
+                );
+            }
+
         }, sectionRef);
 
         return () => ctx.revert();
@@ -65,13 +120,10 @@ export default function ForeverGratefulSection() {
     return (
         <section
             ref={sectionRef}
-            className="section-pad"
+            className="relative w-full overflow-hidden h-screen flex flex-col pt-10 pb-6 md:pt-16 md:pb-12"
             style={{
                 background:
                     "linear-gradient(170deg, var(--bg-base) 0%, var(--blush) 40%, var(--bg-base) 100%)",
-                position: "relative",
-                overflow: "hidden",
-                textAlign: "center",
             }}
             aria-label="Forever Grateful"
         >
@@ -93,15 +145,8 @@ export default function ForeverGratefulSection() {
                 }}
             />
 
-            <div
-                style={{
-                    position: "relative",
-                    zIndex: 1,
-                    maxWidth: "700px",
-                    margin: "0 auto",
-                    padding: "0 1.5rem",
-                }}
-            >
+            {/* Guaranteed Title Block - Fixed height and width relative to the section */}
+            <div ref={titleRef} className="shrink-0 flex flex-col items-center justify-center opacity-0 z-20 px-4 text-center">
                 <p
                     style={{
                         fontSize: "0.7rem",
@@ -113,141 +158,128 @@ export default function ForeverGratefulSection() {
                 >
                     With all our love
                 </p>
-
-                <div ref={titleRef} style={{ opacity: 0 }}>
-                    <h2
-                        style={{
-                            fontSize: "clamp(3.8rem, 9vw, 8rem)",
-                            color: "var(--mauve-dark)",
-                            lineHeight: 1.05,
-                            textShadow: "0 2px 20px rgba(255,255,255,0.8)",
-                        }}
-                    >
-                        Forever Grateful
-                    </h2>
-                    <p
-                        className="font-heading"
-                        style={{
-                            fontSize: "clamp(2rem, 4.5vw, 3.5rem)",
-                            color: "var(--plum)",
-                            marginTop: "0.3rem",
-                        }}
-                    >
-                        for you, Aura 🌸
-                    </p>
-                </div>
-
-                <div ref={bodyRef} style={{ opacity: 0 }}>
-                    <p
-                        style={{
-                            marginTop: "2.5rem",
-                            fontSize: "clamp(1rem, 1.5vw, 1.15rem)",
-                            color: "var(--text-body)",
-                            lineHeight: 1.85,
-                            fontWeight: 400,
-                        }}
-                    >
-                        A year ago you arrived and turned our quiet world into a symphony of
-                        joy. Every morning you wake us with your laughter. Every milestone
-                        reminds us how fast these moments pass. We promise to treasure every
-                        single one — for the rest of our lives.
-                    </p>
-
-                    <p
-                        className="font-body"
-                        style={{
-                            marginTop: "2rem",
-                            fontSize: "clamp(1.3rem, 2.5vw, 2rem)",
-                            color: "var(--mauve-dark)",
-                            fontStyle: "italic",
-                        }}
-                    >
-                        "You are our greatest love story."
-                    </p>
-                </div>
-
-                {/* Family photo strip */}
-                <div
-                    ref={stripRef}
+                <h2
                     style={{
-                        marginTop: "4rem",
-                        display: "flex",
-                        justifyContent: "center",
-                        gap: "16px",
-                        flexWrap: "wrap",
+                        fontSize: "clamp(3.8rem, 9vw, 8rem)",
+                        color: "var(--mauve-dark)",
+                        lineHeight: 1.05,
+                        textShadow: "0 2px 20px rgba(255,255,255,0.8)",
                     }}
                 >
-                    {STRIP.map((src, i) => (
-                        <div
-                            key={i}
-                            className="strip-img perf-layer oval-frame"
-                            style={{
-                                position: "relative",
-                                width: "clamp(100px, 22vw, 180px)",
-                                aspectRatio: "2/3",
-                                borderRadius: "12px",
-                                overflow: "hidden",
-                                boxShadow: "0 12px 32px rgba(140,90,115,0.1)",
-                                transform: `rotate(${[-3, 1, -2][i] ?? 0}deg)`,
-                                opacity: 0,
-                            }}
-                        >
-                            <Image
-                                src={src}
-                                alt={`Family moment ${i + 1}`}
-                                fill
-                                sizes="180px"
-                                style={{ objectFit: "cover" }}
-                            />
-                        </div>
-                    ))}
-                </div>
-
-                {/* Gold divider */}
-                <div
-                    style={{
-                        margin: "4rem auto 0",
-                        height: "1px",
-                        width: "120px",
-                        background:
-                            "linear-gradient(to right, transparent, var(--gold), transparent)",
-                    }}
-                />
-            </div>
-
-            {/* Footer */}
-            <footer
-                ref={footerRef}
-                style={{
-                    position: "relative",
-                    zIndex: 1,
-                    marginTop: "5rem",
-                    paddingBottom: "3rem",
-                    opacity: 0,
-                }}
-            >
+                    Forever Grateful
+                </h2>
                 <p
                     className="font-heading"
                     style={{
-                        fontSize: "clamp(2rem, 4vw, 3rem)",
-                        color: "var(--mauve-dark)",
-                        letterSpacing: "0.05em",
+                        fontSize: "clamp(2rem, 4.5vw, 3.5rem)",
+                        color: "var(--plum)",
+                        marginTop: "0.3rem",
                     }}
                 >
-                    Happy 1st Birthday, Aura! 🎀✨
+                    for you, Aura 🌸
                 </p>
-                <p
-                    style={{
-                        marginTop: "0.75rem",
-                        fontSize: "0.75rem",
-                        letterSpacing: "0.2em",
-                        textTransform: "uppercase",
-                        color: "var(--text-body)",
-                    }}
+            </div>
+
+            {/* Exactly 10px Gap Enforced */}
+            <div className="shrink-0 h-[10px] md:h-[15px]" />
+
+            {/* Clipping Mask Viewport Container */}
+            <div ref={maskRef} className="flex-1 w-full overflow-hidden relative z-10">
+                {/* Scrolling Canvas */}
+                <div
+                    ref={scrollContentRef}
+                    className="absolute top-0 left-0 w-full pb-[20vh] flex flex-col items-center justify-start text-center"
                 >
-                    Made with love · {new Date().getFullYear()}
-                </p>
-            </footer>
+                    <div className="w-full max-w-[700px] px-4 pt-8">
+
+                        {/* Body Text */}
+                        <div ref={textRef} className="flex flex-col items-center">
+                            <p
+                                style={{
+                                    fontSize: "clamp(1rem, 1.5vw, 1.15rem)",
+                                    color: "var(--text-body)",
+                                    lineHeight: 1.85,
+                                    fontWeight: 400,
+                                    // Initially hidden/blurred for JS to take over
+                                    opacity: 0,
+                                    filter: "blur(12px)"
+                                }}
+                            >
+                                A year ago you arrived and turned our quiet world into a symphony of
+                                joy. Every morning you wake us with your laughter. Every milestone
+                                reminds us how fast these moments pass. We promise to treasure every
+                                single one — for the rest of our lives.
+                            </p>
+
+                            <p
+                                className="font-body"
+                                style={{
+                                    marginTop: "2rem",
+                                    fontSize: "clamp(1.3rem, 2.5vw, 2rem)",
+                                    color: "var(--mauve-dark)",
+                                    fontStyle: "italic",
+                                    opacity: 0,
+                                    filter: "blur(12px)"
+                                }}
+                            >
+                                "You are our greatest love story."
+                            </p>
+                        </div>
+
+                        {/* Family photo strip */}
+                        <div
+                            ref={imagesRef}
+                            style={{
+                                marginTop: "5rem",
+                                display: "flex",
+                                justifyContent: "center",
+                                gap: "16px",
+                                flexWrap: "wrap",
+                            }}
+                        >
+                            {STRIP.map((src, i) => (
+                                <div
+                                    key={i}
+                                    className="strip-img perf-layer oval-frame"
+                                    style={{
+                                        position: "relative",
+                                        width: "clamp(100px, 22vw, 180px)",
+                                        aspectRatio: "2/3",
+                                        borderRadius: "12px",
+                                        overflow: "hidden",
+                                        boxShadow: "0 12px 32px rgba(140,90,115,0.1)",
+                                        transform: `rotate(${[-3, 1, -2][i] ?? 0}deg)`,
+                                        opacity: 0,
+                                        filter: "blur(16px)"
+                                    }}
+                                >
+                                    <Image
+                                        src={src}
+                                        alt={`Family moment ${i + 1}`}
+                                        fill
+                                        sizes="180px"
+                                        style={{ objectFit: "cover" }}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Gold divider */}
+                        <div
+                            ref={dividerRef}
+                            style={{
+                                margin: "5rem auto 0",
+                                height: "1px",
+                                width: "120px",
+                                background:
+                                    "linear-gradient(to right, transparent, var(--gold), transparent)",
+                                opacity: 0,
+                                transformOrigin: "center"
+                            }}
+                        />
+                    </div>
+                </div>
+            </div>
         </section>
     );
 }

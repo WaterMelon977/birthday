@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react";
 
 // Eager-load Hero for instant LCP
 import HeroSection from "@/features/story/components/HeroSection";
+import Footer from "@/features/story/components/Footer";
 
 // Lazy-load remaining heavy sections
 const StoryBeginsSection = lazy(
@@ -84,6 +85,8 @@ export default function Home() {
       <Suspense fallback={<SectionLoader />}>
         <ForeverGratefulSection />
       </Suspense>
+
+      <Footer />
     </main>
   );
 }

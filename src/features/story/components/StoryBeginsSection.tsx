@@ -44,43 +44,22 @@ export default function StoryBeginsSection() {
             tl.fromTo(
                 imageLeftRef.current,
                 { x: "-60vw", y: 200, opacity: 0, rotate: -45, scale: 0.6 },
-                {
-                    x: 10,
-                    y: 0,
-                    opacity: 1,
-                    rotate: -4,
-                    scale: 1,
-                    ease: "power3.out",
-                },
+                { x: 0, y: 0, opacity: 1, rotate: -4, scale: 1, ease: "power3.out" },
                 0 // starts at the very beginning of the pin
             );
 
             tl.fromTo(
                 imageRightRef.current,
                 { x: "60vw", y: -200, opacity: 0, rotate: 45, scale: 0.6 },
-                {
-                    x: 80,
-                    y: 0,
-                    opacity: 1,
-                    rotate: 4,
-                    scale: 1,
-                    ease: "power3.out",
-                },
+                { x: 0, y: 0, opacity: 1, rotate: 4, scale: 1, ease: "power3.out" },
                 0 // starts at the same time
             );
 
-            // 2. Deep staggered blooming effect for the text lines
+            // 2. Deep staggered blooming effect for the text lines (Frosted Reveal)
             tl.fromTo(
                 linesRef.current,
-                { opacity: 0, y: 120, scale: 0.85, filter: "blur(10px)" },
-                {
-                    opacity: 1,
-                    y: 0,
-                    scale: 1,
-                    filter: "blur(0px)",
-                    stagger: 0.25,
-                    ease: "power2.out",
-                },
+                { opacity: 0, filter: "blur(12px)", scale: 0.95 },
+                { opacity: 1, filter: "blur(0px)", scale: 1, stagger: 0.3, ease: "power2.out", duration: 0.8 },
                 0.2 // starts slightly after the images begin swooping in
             );
         }, sectionRef);
@@ -91,97 +70,40 @@ export default function StoryBeginsSection() {
     return (
         <section
             ref={sectionRef}
-            className="section-pad relative overflow-hidden flex items-center justify-center"
+            className="section-pad relative overflow-hidden flex items-center justify-center min-h-[100svh]"
             style={{
-                background:
-                    "linear-gradient(160deg, var(--bg-base) 0%, var(--blush) 55%, #fff 100%)",
-                minHeight: "100svh",
+                background: "linear-gradient(160deg, var(--bg-base) 0%, var(--blush) 55%, #fff 100%)",
             }}
             aria-label="The Story Begins"
         >
             {/* Background glow */}
             <div
+                className="absolute top-[10%] left-1/2 -translate-x-1/2 w-[90vw] md:w-[60vw] h-[90vw] md:h-[60vw] rounded-full pointer-events-none z-0"
                 style={{
-                    position: "absolute",
-                    top: "10%",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    width: "60vw",
-                    height: "60vw",
-                    background: "radial-gradient(circle, rgba(246,174,188,0.15) 0%, transparent 70%)", // soft rose glow
-                    pointerEvents: "none",
-                    borderRadius: "50%",
-                    zIndex: 0,
+                    background: "radial-gradient(circle, rgba(246,174,188,0.15) 0%, transparent 70%)",
                 }}
             />
 
-            <div
-                className="relative"
-                style={{
-                    maxWidth: "1100px",
-                    margin: "0 auto",
-                    padding: "0 1.5rem",
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr 1fr",
-                    gap: "4rem",
-                    alignItems: "center",
-                    zIndex: 1,
-                }}
-            >
+            <div className="relative w-full max-w-[1100px] mx-auto px-4 sm:px-6 flex flex-col md:grid md:grid-cols-3 gap-8 md:gap-16 items-center justify-center z-10 py-12 md:py-0">
                 {/* Left accent image */}
                 <div
                     ref={imageLeftRef}
-                    className=""
-                    style={{
-                        position: "relative",
-                        aspectRatio: "3/4",
-                        borderRadius: "16px",
-                        overflow: "hidden",
-                        // boxShadow: "0 24px 64px rgba(140,90,115,0.08)",
-                        opacity: 0,
-                    }}
+                    className="relative w-[55%] max-w-[220px] md:w-full md:max-w-none aspect-[3/4] rounded-2xl overflow-hidden opacity-0 self-start md:self-auto ml-2 sm:ml-8 md:ml-0"
                 >
                     <Image
                         src={ANIM_LEFT}
                         alt="A cherished memory"
                         fill
-                        sizes="25vw"
+                        sizes="(max-width: 768px) 55vw, 33vw"
                         style={{ objectFit: "cover" }}
                     />
                     {/* Soft rose overlay */}
-                    <div
-                        style={{
-                            position: "absolute",
-                            inset: 0,
-                            background: "rgba(246,174,188,0.05)",
-                            mixBlendMode: "multiply",
-                        }}
-                    />
+                    <div className="absolute inset-0 bg-[#f6aebc] mix-blend-multiply opacity-5" />
                 </div>
 
                 {/* Centre text */}
-                <div
-                    style={{
-                        gridColumn: "1 / -1",
-                        textAlign: "center",
-                        gridRow: "1",
-                        gridColumnStart: "2",
-                        gridColumnEnd: "3",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "0.6rem",
-                    }}
-                >
-                    <p
-                        className="font-serif"
-                        style={{
-                            fontSize: "clamp(0.7rem, 1vw, 0.85rem)",
-                            letterSpacing: "0.3em",
-                            textTransform: "uppercase",
-                            color: "var(--mauve-dark)",
-                            marginBottom: "1rem",
-                        }}
-                    >
+                <div className="flex flex-col gap-3 relative z-10 text-center my-6 md:my-0">
+                    <p className="font-serif text-[0.65rem] sm:text-xs md:text-[0.85rem] tracking-[0.2em] md:tracking-[0.3em] uppercase text-[var(--mauve-dark)] mb-2 md:mb-4">
                         A letter from the heart
                     </p>
 
@@ -189,14 +111,7 @@ export default function StoryBeginsSection() {
                         <span
                             key={i}
                             ref={(el) => addLineRef(el, i)}
-                            style={{
-                                display: "block",
-                                fontSize: "clamp(1.1rem, 1.8vw, 1.4rem)",
-                                fontFamily: "var(--font-serif)",
-                                color: "var(--text-body)",
-                                lineHeight: 1.6,
-                                opacity: 0,
-                            }}
+                            className="block text-[1rem] sm:text-[1.15rem] md:text-[1.3rem] lg:text-[1.4rem] font-serif text-[var(--text-body)] leading-relaxed opacity-0 drop-shadow-sm md:drop-shadow-none"
                         >
                             {line}
                         </span>
@@ -206,21 +121,13 @@ export default function StoryBeginsSection() {
                 {/* Right accent image */}
                 <div
                     ref={imageRightRef}
-                    className=""
-                    style={{
-                        position: "relative",
-                        aspectRatio: "3/4",
-                        borderRadius: "16px",
-                        overflow: "hidden",
-                        // boxShadow: "0 24px 64px rgba(140,90,115,0.08)",
-                        opacity: 0,
-                    }}
+                    className="relative w-[55%] max-w-[220px] md:w-full md:max-w-none aspect-[3/4] rounded-2xl overflow-hidden opacity-0 self-end md:self-auto mr-2 sm:mr-8 md:mr-0"
                 >
                     <Image
                         src={ANIM_RIGHT}
                         alt="Aura smiling"
                         fill
-                        sizes="25vw"
+                        sizes="(max-width: 768px) 55vw, 33vw"
                         style={{ objectFit: "cover", objectPosition: "top" }}
                     />
                 </div>
